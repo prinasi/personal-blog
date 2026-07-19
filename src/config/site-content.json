@@ -1,7 +1,7 @@
 {
 	"meta": {
 		"title": "Prinasi",
-		"description": "YYsuni 的个人博客，记录前端开发、探索、笔记。前端 UI 更新代码仓库。",
+		"description": "Kyle's personal blog, recording daily life and sharing some strange knowledge.",
 		"username": "Kyle"
 	},
 	"theme": {
@@ -45,15 +45,8 @@
 		{
 			"id": "github",
 			"type": "github",
-			"value": "https://github.com/yysuni",
+			"value": "https://github.com/prinasi",
 			"label": "Github",
-			"order": 3
-		},
-		{
-			"id": "juejin",
-			"type": "juejin",
-			"value": "https://juejin.cn/user/2427311675422382",
-			"label": "稀土掘金",
 			"order": 2
 		},
 		{
