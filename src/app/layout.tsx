@@ -1,8 +1,8 @@
 import '@/styles/globals.css'
 
 import type { Metadata } from 'next'
-import Layout from '@/layout'
-import Head from '@/layout/head'
+import type { CSSProperties } from 'react'
+import Link from 'next/link'
 import siteContent from '@/config/site-content.json'
 
 const {
@@ -24,7 +24,6 @@ export const metadata: Metadata = {
 }
 
 const htmlStyle = {
-	cursor: 'url(/images/cursor.svg) 2 1, auto',
 	'--color-brand': theme.colorBrand,
 	'--color-primary': theme.colorPrimary,
 	'--color-secondary': theme.colorSecondary,
@@ -33,25 +32,28 @@ const htmlStyle = {
 	'--color-border': theme.colorBorder,
 	'--color-card': theme.colorCard,
 	'--color-article': theme.colorArticle
-}
+} as CSSProperties
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<html lang='en' suppressHydrationWarning style={htmlStyle}>
-			<Head />
-
 			<body>
-				<script
-					dangerouslySetInnerHTML={{
-						__html: `
-					if (/windows|win32/i.test(navigator.userAgent)) {
-						document.documentElement.classList.add('windows');
-					}
-		      `
-					}}
-				/>
-
-				<Layout>{children}</Layout>
+				<div className='min-h-screen'>
+					<header className='mx-auto flex max-w-5xl items-center justify-between px-6 py-5'>
+						<Link href='/' className='text-lg font-semibold'>
+							{title}
+						</Link>
+						<nav className='flex items-center gap-5 text-sm'>
+							<Link href='/blog' className='hover:text-brand'>
+								文章
+							</Link>
+							<Link href='/write' className='brand-btn'>
+								写文章
+							</Link>
+						</nav>
+					</header>
+					{children}
+				</div>
 			</body>
 		</html>
 	)

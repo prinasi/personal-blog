@@ -5,7 +5,7 @@ import { INIT_DELAY } from '@/consts'
 import { useMarkdownRender } from '@/hooks/use-markdown-render'
 import { useSize } from '@/hooks/use-size'
 import { BlogSidebar } from '@/components/blog-sidebar'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
+import siteContent from '@/config/site-content.json'
 
 type BlogPreviewProps = {
 	markdown: string
@@ -20,7 +20,6 @@ type BlogPreviewProps = {
 export function BlogPreview({ markdown, title, tags, date, summary, cover, slug }: BlogPreviewProps) {
 	const { maxSM: isMobile } = useSize()
 	const { content, toc, loading } = useMarkdownRender(markdown)
-	const { siteContent } = useConfigStore()
 	const summaryInContent = siteContent.summaryInContent ?? false
 
 	if (loading) {

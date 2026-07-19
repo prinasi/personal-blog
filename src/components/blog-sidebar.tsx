@@ -2,10 +2,8 @@
 
 import { motion } from 'motion/react'
 import { ANIMATION_DELAY, INIT_DELAY } from '@/consts'
-import LikeButton from '@/components/like-button'
 import { BlogToc } from '@/components/blog-toc'
 import { ScrollTopButton } from '@/components/scroll-top-button'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
 
 type TocItem = {
 	id: string
@@ -21,9 +19,6 @@ type BlogSidebarProps = {
 }
 
 export function BlogSidebar({ cover, summary, toc, slug }: BlogSidebarProps) {
-	const { siteContent } = useConfigStore()
-	const summaryInContent = siteContent.summaryInContent ?? false
-
 	return (
 		<div className='sticky flex w-[200px] shrink-0 flex-col items-start gap-4 self-start max-sm:hidden' style={{ top: 24 }}>
 			{cover && (
@@ -36,7 +31,7 @@ export function BlogSidebar({ cover, summary, toc, slug }: BlogSidebarProps) {
 				</motion.div>
 			)}
 
-			{summary && !summaryInContent && (
+			{summary && (
 				<motion.div
 					initial={{ opacity: 0, scale: 0.8 }}
 					animate={{ opacity: 1, scale: 1 }}
@@ -49,9 +44,7 @@ export function BlogSidebar({ cover, summary, toc, slug }: BlogSidebarProps) {
 
 			<BlogToc toc={toc} delay={INIT_DELAY + ANIMATION_DELAY * 3} />
 
-			<LikeButton slug={slug} delay={(INIT_DELAY + ANIMATION_DELAY * 4) * 1000} />
-
-			<ScrollTopButton delay={INIT_DELAY + ANIMATION_DELAY * 5} />
+			<ScrollTopButton delay={INIT_DELAY + ANIMATION_DELAY * 4} />
 		</div>
 	)
 }

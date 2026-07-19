@@ -1,14 +1,16 @@
 import { NextConfig } from 'next'
-import { codeInspectorPlugin } from 'code-inspector-plugin'
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
 
 const nextConfig: NextConfig = {
-	devIndicators: false,
-	reactStrictMode: false,
+	output: 'export',
+	trailingSlash: true,
+	basePath,
+	images: {
+		unoptimized: true
+	},
 	reactCompiler: true,
 	pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
-	typescript: {
-		ignoreBuildErrors: true
-	},
 	experimental: {
 		scrollRestoration: false
 	},
@@ -32,21 +34,6 @@ const nextConfig: NextConfig = {
 		})
 
 		return config
-	},
-
-	async redirects() {
-		return [
-			{
-				source: '/zh',
-				destination: '/',
-				permanent: true
-			},
-			{
-				source: '/en',
-				destination: '/',
-				permanent: true
-			}
-		]
 	}
 }
 

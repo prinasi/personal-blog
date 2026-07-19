@@ -1,10 +1,13 @@
 'use client'
 
 import { useAuthStore } from '@/hooks/use-auth'
-import { KJUR, KEYUTIL } from 'jsrsasign'
 import { toast } from 'sonner'
 
 export const GH_API = 'https://api.github.com'
+
+function encodePath(path: string): string {
+	return path.split('/').map(encodeURIComponent).join('/')
+}
 
 function handle401Error(): void {
 	if (typeof sessionStorage === 'undefined') return
@@ -23,47 +26,8 @@ export function toBase64Utf8(input: string): string {
 	return btoa(unescape(encodeURIComponent(input)))
 }
 
-export function signAppJwt(appId: string, privateKeyPem: string): string {
-	const now = Math.floor(Date.now() / 1000)
-	const header = { alg: 'RS256', typ: 'JWT' }
-	const payload = { iat: now - 60, exp: now + 8 * 60, iss: appId }
-	const prv = KEYUTIL.getKey(privateKeyPem) as unknown as string
-	return KJUR.jws.JWS.sign('RS256', JSON.stringify(header), JSON.stringify(payload), prv)
-}
-
-export async function getInstallationId(jwt: string, owner: string, repo: string): Promise<number> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/installation`, {
-		headers: {
-			Authorization: `Bearer ${jwt}`,
-			Accept: 'application/vnd.github+json',
-			'X-GitHub-Api-Version': '2022-11-28'
-		}
-	})
-	if (res.status === 401) handle401Error()
-	if (res.status === 422) handle422Error()
-	if (!res.ok) throw new Error(`installation lookup failed: ${res.status}`)
-	const data = await res.json()
-	return data.id
-}
-
-export async function createInstallationToken(jwt: string, installationId: number): Promise<string> {
-	const res = await fetch(`${GH_API}/app/installations/${installationId}/access_tokens`, {
-		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${jwt}`,
-			Accept: 'application/vnd.github+json',
-			'X-GitHub-Api-Version': '2022-11-28'
-		}
-	})
-	if (res.status === 401) handle401Error()
-	if (res.status === 422) handle422Error()
-	if (!res.ok) throw new Error(`create token failed: ${res.status}`)
-	const data = await res.json()
-	return data.token as string
-}
-
 export async function getFileSha(token: string, owner: string, repo: string, path: string, branch: string): Promise<string | undefined> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(branch)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
@@ -80,7 +44,7 @@ export async function getFileSha(token: string, owner: string, repo: string, pat
 
 export async function putFile(token: string, owner: string, repo: string, path: string, contentBase64: string, message: string, branch: string) {
 	const sha = await getFileSha(token, owner, repo, path, branch)
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodePath(path)}`, {
 		method: 'PUT',
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -99,7 +63,7 @@ export async function putFile(token: string, owner: string, repo: string, path: 
 // Batch commit APIs
 
 export async function getRef(token: string, owner: string, repo: string, ref: string): Promise<{ sha: string }> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodePath(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
@@ -111,6 +75,21 @@ export async function getRef(token: string, owner: string, repo: string, ref: st
 	if (!res.ok) throw new Error(`get ref failed: ${res.status}`)
 	const data = await res.json()
 	return { sha: data.object.sha }
+}
+
+export async function getCommitTreeSha(token: string, owner: string, repo: string, commitSha: string): Promise<string> {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/commits/${encodeURIComponent(commitSha)}`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+			Accept: 'application/vnd.github+json',
+			'X-GitHub-Api-Version': '2022-11-28'
+		}
+	})
+	if (res.status === 401) handle401Error()
+	if (!res.ok) throw new Error(`get commit tree failed: ${res.status}`)
+	const data = await res.json()
+	if (!data?.tree?.sha) throw new Error('get commit tree failed: missing tree SHA')
+	return data.tree.sha as string
 }
 
 export type TreeItem = {
@@ -158,7 +137,7 @@ export async function createCommit(token: string, owner: string, repo: string, m
 }
 
 export async function updateRef(token: string, owner: string, repo: string, ref: string, sha: string, force = false): Promise<void> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/refs/${encodeURIComponent(ref)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/refs/${encodePath(ref)}`, {
 		method: 'PATCH',
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -174,7 +153,7 @@ export async function updateRef(token: string, owner: string, repo: string, ref:
 }
 
 export async function readTextFileFromRepo(token: string, owner: string, repo: string, path: string, ref: string): Promise<string | null> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodePath(path)}?ref=${encodeURIComponent(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
@@ -196,7 +175,7 @@ export async function readTextFileFromRepo(token: string, owner: string, repo: s
 
 export async function listRepoFilesRecursive(token: string, owner: string, repo: string, path: string, ref: string): Promise<string[]> {
 	async function fetchPath(targetPath: string): Promise<string[]> {
-		const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodeURIComponent(targetPath)}?ref=${encodeURIComponent(ref)}`, {
+		const res = await fetch(`${GH_API}/repos/${owner}/${repo}/contents/${encodePath(targetPath)}?ref=${encodeURIComponent(ref)}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 				Accept: 'application/vnd.github+json',

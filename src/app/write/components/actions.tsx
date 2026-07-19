@@ -9,17 +9,29 @@ import { usePublish } from '../hooks/use-publish'
 export function WriteActions() {
 	const { loading, mode, form, loadBlogForEdit, originalSlug, updateForm } = useWriteStore()
 	const { openPreview } = usePreviewStore()
-	const { isAuth, onChoosePrivateKey, onPublish, onDelete } = usePublish()
+	const { isAuth, setAuthToken, onPublish, onDelete } = usePublish()
 	const [saving, setSaving] = useState(false)
-	const keyInputRef = useRef<HTMLInputElement>(null)
+	const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
+	const [token, setToken] = useState('')
 	const mdInputRef = useRef<HTMLInputElement>(null)
 	const router = useRouter()
 
 	const handleImportOrPublish = () => {
 		if (!isAuth) {
-			keyInputRef.current?.click()
+			setTokenDialogOpen(true)
 		} else {
 			onPublish()
+		}
+	}
+
+	const handleSaveToken = () => {
+		try {
+			setAuthToken(token)
+			setToken('')
+			setTokenDialogOpen(false)
+			toast.success('令牌已保存到当前浏览器会话')
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : '令牌无效')
 		}
 	}
 
@@ -34,7 +46,7 @@ export function WriteActions() {
 		}
 	}
 
-	const buttonText = isAuth ? (mode === 'edit' ? '更新' : '发布') : '导入密钥'
+	const buttonText = isAuth ? (mode === 'edit' ? '更新' : '发布') : '输入 Token'
 
 	const handleDelete = () => {
 		if (!isAuth) {
@@ -68,18 +80,36 @@ export function WriteActions() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await onChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
 			<input ref={mdInputRef} type='file' accept='.md' className='hidden' onChange={handleMdFileChange} />
+			{tokenDialogOpen && (
+				<div className='fixed inset-0 z-50 grid place-items-center bg-black/35 p-4' onMouseDown={() => setTokenDialogOpen(false)}>
+					<div className='w-full max-w-md rounded-2xl border bg-white p-6 shadow-xl' onMouseDown={e => e.stopPropagation()}>
+						<h2 className='text-lg font-semibold'>连接 GitHub</h2>
+						<p className='text-secondary mt-2 text-sm leading-6'>
+							输入仅用于当前浏览器会话的 Fine-grained Personal Access Token。它需要当前仓库的 Contents: Read and write 权限。
+						</p>
+						<input
+							autoFocus
+							type='password'
+							placeholder='github_pat_...'
+							className='mt-4 w-full rounded-lg border px-3 py-2 text-sm'
+							value={token}
+							onChange={e => setToken(e.target.value)}
+							onKeyDown={e => {
+								if (e.key === 'Enter') handleSaveToken()
+							}}
+						/>
+						<div className='mt-4 flex justify-end gap-2'>
+							<button className='rounded-lg border px-4 py-2 text-sm' onClick={() => setTokenDialogOpen(false)}>
+								取消
+							</button>
+							<button className='brand-btn' onClick={handleSaveToken}>
+								保存 Token
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<ul className='absolute top-4 right-6 flex items-center gap-2'>
 				{mode === 'edit' && (

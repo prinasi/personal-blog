@@ -3,7 +3,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { useWriteStore } from '../../stores/write-store'
-import Link from 'next/link'
 
 type ImagesSectionProps = {
 	delay?: number
@@ -18,12 +17,7 @@ export function ImagesSection({ delay = 0 }: ImagesSectionProps) {
 
 	return (
 		<motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay }} className='card relative'>
-			<div className='flex items-center justify-between'>
-				<h2 className='text-sm'>图片管理</h2>
-				<Link href='/image-toolbox' target='_blank' className='text-xs hover:underline'>
-					压缩工具
-				</Link>
-			</div>
+			<h2 className='text-sm'>图片管理</h2>
 
 			<div className='mt-3 flex items-center gap-2'>
 				<input

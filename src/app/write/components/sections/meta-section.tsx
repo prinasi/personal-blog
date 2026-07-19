@@ -2,8 +2,8 @@ import { motion } from 'motion/react'
 import { useWriteStore } from '../../stores/write-store'
 import { TagInput } from '../ui/tag-input'
 import { useCategories } from '@/hooks/use-categories'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
 import { Select } from '@/components/select'
+import siteContent from '@/config/site-content.json'
 
 type MetaSectionProps = {
 	delay?: number
@@ -11,10 +11,7 @@ type MetaSectionProps = {
 
 export function MetaSection({ delay = 0 }: MetaSectionProps) {
 	const { form, updateForm } = useWriteStore()
-	console.log(form.date)
-
 	const { categories } = useCategories()
-	const { siteContent } = useConfigStore()
 	const enableCategories = siteContent.enableCategories ?? false
 
 	const categoryOptions = [{ value: '', label: '未分类' }, ...categories.map(cat => ({ value: cat, label: cat }))]
