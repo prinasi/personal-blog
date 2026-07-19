@@ -39,7 +39,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 		<html lang='en' suppressHydrationWarning style={htmlStyle}>
 			<body>
 				<div className='min-h-screen'>
-					<header className='mx-auto flex max-w-5xl items-center justify-between px-6 py-5'>
+					<header className='relative z-10 mx-auto flex max-w-5xl items-center justify-between px-6 py-5'>
 						<Link href='/' className='text-lg font-semibold'>
 							{title}
 						</Link>
